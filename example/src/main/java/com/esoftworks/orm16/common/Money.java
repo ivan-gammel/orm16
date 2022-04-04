@@ -1,13 +1,13 @@
 package com.esoftworks.orm16.common;
 
 import java.math.BigDecimal;
-import java.util.Currency;
 
-public record Money(BigDecimal value, Currency currency) {
+public record Money(BigDecimal value,
+                    String currencyCode) {
 
     public static Money fromString(String value) {
         String[] components = value.split(" ");
-        return new Money(new BigDecimal(components[0]), Currency.getInstance(components[1]));
+        return new Money(new BigDecimal(components[0]), components[1]);
     }
 
 }

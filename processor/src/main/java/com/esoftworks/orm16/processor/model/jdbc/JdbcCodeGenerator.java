@@ -1,6 +1,6 @@
 package com.esoftworks.orm16.processor.model.jdbc;
 
-import com.esoftworks.orm16.core.annotations.SerializationContext;
+import com.esoftworks.orm16.core.annotations.MappingContext;
 import com.esoftworks.orm16.processor.model.Model;
 import com.esoftworks.orm16.processor.ClassTemplate;
 import com.esoftworks.orm16.processor.ContextSpecificGenerator;
@@ -15,7 +15,7 @@ public class JdbcCodeGenerator implements ContextSpecificGenerator {
     public Stream<ClassTemplate> enumerateTemplates(Model model,
                                                     Configuration config) {
 
-        Stream<ClassTemplate> repositories = new SerializedView(SerializationContext.PERSISTENCE, model)
+        Stream<ClassTemplate> repositories = new SerializedView(MappingContext.PERSISTENCE, model)
                 .serializedEntities().stream()
                 .map(entity -> new RepositoryTemplate(entity, config));
 

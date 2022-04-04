@@ -8,12 +8,8 @@ import java.lang.annotation.RetentionPolicy;
 @Documented
 @Retention(RetentionPolicy.SOURCE)
 @java.lang.annotation.Target({
-        ElementType.TYPE,
         ElementType.PACKAGE,
-        ElementType.RECORD_COMPONENT,
-        ElementType.FIELD,
-        ElementType.PARAMETER,
-        ElementType.METHOD
+        ElementType.MODULE
 })
 public @interface CodeGenerator {
 

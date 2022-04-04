@@ -1,6 +1,6 @@
 package com.esoftworks.orm16.processor.model.builder;
 
-import com.esoftworks.orm16.core.annotations.SerializationContext;
+import com.esoftworks.orm16.core.annotations.MappingContext;
 import com.esoftworks.orm16.processor.model.CodeGenerationConfiguration;
 import com.esoftworks.orm16.processor.model.Namespace;
 
@@ -15,7 +15,7 @@ public class NamespaceBuilder implements Builder<Namespace> {
 
     private final String name;
     private final Map<String, EntityBuilder> entities = new HashMap<>();
-    private Map<SerializationContext, CodeGenerationConfiguration> configuration = new HashMap<>();
+    private Map<MappingContext, CodeGenerationConfiguration> configuration = new HashMap<>();
 
     public NamespaceBuilder(PackageElement e) {
         name = e.getQualifiedName().toString();

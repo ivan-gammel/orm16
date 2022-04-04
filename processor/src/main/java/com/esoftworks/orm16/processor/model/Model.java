@@ -1,6 +1,6 @@
 package com.esoftworks.orm16.processor.model;
 
-import com.esoftworks.orm16.core.annotations.SerializationContext;
+import com.esoftworks.orm16.core.annotations.MappingContext;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,7 +11,7 @@ public record Model(List<Namespace> namespaces) {
         if (namespaces == null) throw new NullPointerException("namespaces");
     }
 
-    public boolean supports(SerializationContext ctx) {
+    public boolean supports(MappingContext ctx) {
         return namespaces.stream().anyMatch(ns -> ns.supports(ctx));
     }
 

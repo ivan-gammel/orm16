@@ -1,6 +1,6 @@
 package com.esoftworks.orm16.processor.view;
 
-import com.esoftworks.orm16.core.annotations.SerializationContext;
+import com.esoftworks.orm16.core.annotations.MappingContext;
 import com.esoftworks.orm16.processor.model.*;
 
 import javax.lang.model.element.TypeElement;
@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 import static java.util.function.Predicate.not;
 
-public record SerializedEntity(SerializationContext context,
+public record SerializedEntity(MappingContext context,
                                TypeElement element,
                                String packageName,
                                String name,
@@ -19,7 +19,7 @@ public record SerializedEntity(SerializationContext context,
                                SerializedEntity compositeKey) {
 
 
-    public SerializedEntity(SerializationContext context,
+    public SerializedEntity(MappingContext context,
                             Model model,
                             Namespace namespace,
                             Entity entity) {
@@ -32,7 +32,7 @@ public record SerializedEntity(SerializationContext context,
                 entity.compositeKey() == null ? null : new SerializedEntity(context, model, namespace, entity.compositeKey()));
     }
 
-    private static List<SerializedAttribute> attributes(SerializationContext context,
+    private static List<SerializedAttribute> attributes(MappingContext context,
                                                         Model model,
                                                         Namespace namespace,
                                                         Entity entity) {

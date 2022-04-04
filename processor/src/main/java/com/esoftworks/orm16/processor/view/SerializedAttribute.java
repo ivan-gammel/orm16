@@ -1,18 +1,18 @@
 package com.esoftworks.orm16.processor.view;
 
-import com.esoftworks.orm16.core.annotations.SerializationContext;
+import com.esoftworks.orm16.core.annotations.MappingContext;
 import com.esoftworks.orm16.processor.model.*;
 
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public record SerializedAttribute(SerializationContext context,
+public record SerializedAttribute(MappingContext context,
                                   String name,
                                   DataTypeReference type,
                                   boolean primaryKey,
                                   String serializedName) {
 
-    public SerializedAttribute(SerializationContext context,
+    public SerializedAttribute(MappingContext context,
                                Model model,
                                Namespace namespace,
                                Entity entity,

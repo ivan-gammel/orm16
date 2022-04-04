@@ -10,6 +10,7 @@ public class ReferencesContributor implements ModelContributor {
 
     @Override
     public void accept(ModelBuilder builder,
-                       Set<? extends Element> annotatedElements, ProcessingEnvironment processingEnv) {
+                       Set<? extends Element> annotatedElements,
+                       ProcessingEnvironment env) {
     }
 }

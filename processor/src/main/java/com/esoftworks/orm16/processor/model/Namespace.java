@@ -1,6 +1,6 @@
 package com.esoftworks.orm16.processor.model;
 
-import com.esoftworks.orm16.core.annotations.SerializationContext;
+import com.esoftworks.orm16.core.annotations.MappingContext;
 
 import java.util.List;
 import java.util.Map;
@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public record Namespace(String name,
                         List<Entity> entities,
-                        Map<SerializationContext, CodeGenerationConfiguration> configuration) {
+                        Map<MappingContext, CodeGenerationConfiguration> configuration) {
 
     public Namespace {
         if (name == null)  throw new NullPointerException("name");
@@ -16,7 +16,7 @@ public record Namespace(String name,
         if (configuration  == null)  throw new NullPointerException("configuration");
     }
 
-    public boolean supports(SerializationContext ctx) {
+    public boolean supports(MappingContext ctx) {
         return configuration.containsKey(ctx) || entities.stream().anyMatch(entity -> entity.supports(ctx));
     }
 

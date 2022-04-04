@@ -2,15 +2,15 @@ package com.esoftworks.orm16.processor.model;
 
 import com.esoftworks.orm16.core.annotations.Conversion;
 import com.esoftworks.orm16.core.annotations.GeneratedSources;
-import com.esoftworks.orm16.core.annotations.SerializationContext;
-import com.esoftworks.orm16.core.annotations.SerializationFormat;
+import com.esoftworks.orm16.core.annotations.MappingContext;
+import com.esoftworks.orm16.core.annotations.OutputFormat;
 import com.esoftworks.orm16.core.converters.Converter;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public record CodeGenerationConfiguration(
-        SerializationFormat preferredFormat,
+        OutputFormat preferredFormat,
         Map<Class<?>, Converter<?, ?>> conversions
 ) {
 
@@ -30,10 +30,10 @@ public record CodeGenerationConfiguration(
         return map;
     }
 
-    public static Map<SerializationContext, CodeGenerationConfiguration> configure(GeneratedSources annotation) {
-        var map = new HashMap<SerializationContext, CodeGenerationConfiguration>();
+    public static Map<MappingContext, CodeGenerationConfiguration> configure(GeneratedSources annotation) {
+        var map = new HashMap<MappingContext, CodeGenerationConfiguration>();
         CodeGenerationConfiguration config = new CodeGenerationConfiguration(annotation);
-        for (SerializationContext target : annotation.target()) {
+        for (MappingContext target : annotation.target()) {
             map.put(target, config);
         }
         return map;

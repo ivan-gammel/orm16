@@ -1,10 +1,9 @@
 package com.esoftworks.orm16.core.annotations;
 
-import java.io.Serializable;
 import java.lang.annotation.*;
 
-import static com.esoftworks.orm16.core.annotations.SerializationContext.INTEGRATION;
-import static com.esoftworks.orm16.core.annotations.SerializationContext.PERSISTENCE;
+import static com.esoftworks.orm16.core.annotations.MappingContext.INTEGRATION;
+import static com.esoftworks.orm16.core.annotations.MappingContext.PERSISTENCE;
 
 /**
  * The mapping of an attribute to external data model depends on whether there exists known
@@ -25,17 +24,19 @@ import static com.esoftworks.orm16.core.annotations.SerializationContext.PERSIST
 @java.lang.annotation.Target({
         ElementType.RECORD_COMPONENT
 })
-@Repeatable(Mappings.class)
+@Repeatable(AttributeMappings.class)
 public @interface Mapping {
 
     /**
      * By default same mapping applies to both contexts
      * @return
      */
-    SerializationContext[] context() default {
+    MappingContext[] context() default {
             PERSISTENCE,
             INTEGRATION
     };
+
+    AttributeMappingKind serializeAs() default AttributeMappingKind.VALUE;
 
     /**
      * @return name of the serialized attribute or column name
@@ -59,7 +60,7 @@ public @interface Mapping {
      *
      * @return
      */
-    SerializationFormat format() default SerializationFormat.NONE;
+    OutputFormat format() default OutputFormat.NONE;
 
     /**
      *

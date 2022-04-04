@@ -11,6 +11,6 @@ import java.lang.annotation.RetentionPolicy;
         ElementType.TYPE,
         ElementType.PACKAGE
 })
-public @interface SerializationTargets {
-    SerializedEntity[] value() default {};
+public @interface EntityMappings {
+    MappedEntity[] value() default {};
 }

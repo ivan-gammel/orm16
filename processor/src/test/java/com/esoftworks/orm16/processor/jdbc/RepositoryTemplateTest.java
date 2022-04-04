@@ -13,7 +13,7 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 
-import static com.esoftworks.orm16.core.annotations.SerializationContext.PERSISTENCE;
+import static com.esoftworks.orm16.core.annotations.MappingContext.PERSISTENCE;
 import static com.esoftworks.orm16.processor.model.builder.Builder.given;
 import static java.util.Collections.emptyMap;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,10 +30,10 @@ public class RepositoryTemplateTest {
     public void shouldGenerateSimpleRepository() throws TemplateException, IOException {
 
         var properties = List.of(
-                new Attribute("uuid", "java.util.UUID", true, emptyMap(), null),
-                new Attribute("created", "java.time.Instant", false, emptyMap(), null),
-                new Attribute("subject", "java.lang.String", false, emptyMap(), null),
-                new Attribute("content", "java.lang.String", false, emptyMap(), null)
+                new Attribute("uuid", "java.util.UUID", true, emptyMap()),
+                new Attribute("created", "java.time.Instant", false, emptyMap()),
+                new Attribute("subject", "java.lang.String", false, emptyMap()),
+                new Attribute("content", "java.lang.String", false, emptyMap())
         );
 
         var entity = new Entity(null,"com.example.model", "Document", properties, null, Map.of(PERSISTENCE, new EntityTarget("documents", false)));

@@ -10,7 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 @java.lang.annotation.Target({
         ElementType.RECORD_COMPONENT
 })
-public  @interface Mappings {
+public  @interface AttributeMappings {
 
     Mapping[] value() default {};
 

@@ -15,8 +15,8 @@ import java.lang.annotation.RetentionPolicy;
 })
 public @interface AttributeOverride {
 
-    String attribute();
+    String map();
 
-    String serializedAs();
+    String to();
 
 }

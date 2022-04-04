@@ -17,10 +17,7 @@ import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.esoftworks.orm16.processor.model.builder.Builder.given;
@@ -29,16 +26,13 @@ import static java.util.stream.Collectors.joining;
 
 @SupportedAnnotationTypes({
         "com.esoftworks.orm16.core.annotations.CodeGenerator",
-        "com.esoftworks.orm16.core.annotations.Serialize",
         "com.esoftworks.orm16.core.annotations.GeneratedSources",
-        "com.esoftworks.orm16.core.annotations.Target",
+        "com.esoftworks.orm16.core.annotations.EntityMappings",
+        "com.esoftworks.orm16.core.annotations.MappedEntity",
+        "com.esoftworks.orm16.core.annotations.AttributeMappings",
+        "com.esoftworks.orm16.core.annotations.Mapping",
         "com.esoftworks.orm16.core.annotations.References",
-        "com.esoftworks.orm16.core.annotations.Embed",
-        "com.esoftworks.orm16.core.annotations.Embeddable",
-        "com.esoftworks.orm16.core.annotations.EmbeddableTarget",
-        "com.esoftworks.orm16.core.annotations.Conversion",
-        "com.esoftworks.orm16.core.annotations.AttributeOverride",
-        "com.esoftworks.orm16.core.annotations.Id",
+        "com.esoftworks.orm16.core.annotations.Id"
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
@@ -46,12 +40,16 @@ public class RepositoryGenerator extends AbstractProcessor {
 
     private final Map<String, ModelContributor> contributors = given(() -> {
         var map = new HashMap<String, ModelContributor>();
-        map.put(Embed.class.getSimpleName(), new EmbedContributor());
-        map.put(EmbeddableTargets.class.getSimpleName(), new EmbeddableContributor());
-        map.put(CodeGenerator.class.getSimpleName(), new CodeGeneratorContributor());
+        map.put(CodeGenerator.class.getSimpleName(), new PackageMappingContributor());
+        map.put(GeneratedSources.class.getSimpleName(), new PackageMappingContributor());
+
+        map.put(EntityMappings.class.getSimpleName(), new EntityMappingContributor());
+        map.put(MappedEntity.class.getSimpleName(), new EntityMappingContributor());
+
+        map.put(AttributeMappings.class.getSimpleName(), new AttributeMappingContributor());
+        map.put(Mapping.class.getSimpleName(), new AttributeMappingContributor());
+
         map.put(References.class.getSimpleName(), new ReferencesContributor());
-        map.put(SerializationTargets.class.getSimpleName(), new SerializeContributor());
-        map.put(SerializedEntity.class.getSimpleName(), new TargetContributor());
         map.put(Id.class.getSimpleName(), new IdContributor());
         return unmodifiableMap(map);
     });
@@ -76,15 +74,11 @@ public class RepositoryGenerator extends AbstractProcessor {
                            RoundEnvironment roundEnv) {
         Messager messager = processingEnv.getMessager();
         if (annotations.size() > 0) {
-            messager.printMessage(Diagnostic.Kind.NOTE,
-                    "Discovered annotation: " + annotations.stream().map(Object::toString).collect(joining(", ")));
             for (TypeElement annotation : annotations) {
                 Set<? extends Element> annotatedElements
                         = roundEnv.getElementsAnnotatedWith(annotation);
                 var contributor = contributors.get(annotation.getSimpleName().toString());
                 if (contributor != null) {
-                    messager.printMessage(Diagnostic.Kind.NOTE, "Processing " + annotation.getSimpleName() + " on "
-                            + annotatedElements.stream().map(Objects::toString).collect(Collectors.joining(", ")));
                     contributor.accept(builder, annotatedElements, processingEnv);
                 } else {
                     messager.printMessage(Diagnostic.Kind.WARNING, "Feature @" + annotation.getSimpleName() + " not supported on "
@@ -93,18 +87,19 @@ public class RepositoryGenerator extends AbstractProcessor {
             }
         } else {
             Model model = builder.build();
-            for (SerializationContext ctx : SerializationContext.values()) {
+            for (MappingContext ctx : MappingContext.values()) {
+                String contextName = ctx.toString().toLowerCase(Locale.ROOT);
                 if (model.supports(ctx)) {
-                    messager.printMessage(Diagnostic.Kind.NOTE, "Generating code for " + ctx);
                     try {
                         CodeGenerators.forTarget(ctx)
                                 .enumerateTemplates(model, config)
                                 .forEach(template -> generate(template, roundEnv));
+                        messager.printMessage(Diagnostic.Kind.NOTE, "Successfully generated code for " + contextName + " mapping.");
                     } catch (UnsupportedOperationException e) {
-                        messager.printMessage(Diagnostic.Kind.WARNING, "Serialization context not supported: " + ctx);
+                        messager.printMessage(Diagnostic.Kind.WARNING, "Cannot generate code for " + contextName + " mapping. Operation not supported.");
                     }
                 } else {
-                    messager.printMessage(Diagnostic.Kind.NOTE, "Serialization context " + ctx + " ignored.");
+                    messager.printMessage(Diagnostic.Kind.NOTE, "Mapping not defined for " + contextName + ". Code will not be generated.");
                 }
             }
         }
@@ -114,8 +109,7 @@ public class RepositoryGenerator extends AbstractProcessor {
     private void generate(ClassTemplate template, RoundEnvironment roundEnv) {
         try {
             JavaFileObject file = processingEnv.getFiler().createSourceFile(template.name());
-            try (OutputStream stream = file.openOutputStream();
-                 PrintWriter writer = new PrintWriter(stream)) {
+            try (OutputStream stream = file.openOutputStream(); PrintWriter writer = new PrintWriter(stream)) {
                 template.writeTo(writer);
             }
         } catch (IOException | TemplateException e) {

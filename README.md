@@ -13,12 +13,13 @@ public record Account(@Id UUID uuid,                // primary key
                       Instant created,              // use standard mapping to TIMESTAMP
                       String username,
                       @Value Locale locale,         // serialize as string value
-                      @Embed(                       // unwrap object (only in database)
+                      @Mapping(                       // unwrap object (only in database)
                               context = PERSISTENCE, 
+                              serializeAs = EMBEDDED,
                               overrides = {
                                       @AttributeOverride(map = "currencyCode", to = "currency")
                               }) 
-                      @Value(context = INTEGRATION) // serialize to string (only in JSON) 
+                      @Mapping(context = INTEGRATION, serializeAs = VALUE) // serialize to string e.g. "100 EUR" 
                       Money balance             
                      ) {
 }

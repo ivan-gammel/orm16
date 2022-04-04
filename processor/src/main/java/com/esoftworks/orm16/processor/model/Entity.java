@@ -1,6 +1,6 @@
 package com.esoftworks.orm16.processor.model;
 
-import com.esoftworks.orm16.core.annotations.SerializationContext;
+import com.esoftworks.orm16.core.annotations.MappingContext;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
@@ -13,7 +13,7 @@ public record Entity(
         String name,
         List<Attribute> attributes,
         Entity compositeKey,
-        Map<SerializationContext, EntityTarget> mappings) {
+        Map<MappingContext, EntityTarget> mappings) {
 
     public Optional<Attribute> find(String name) {
         return attributes.stream()
@@ -21,7 +21,7 @@ public record Entity(
                 .findFirst();
     }
 
-    public boolean supports(SerializationContext ctx) {
+    public boolean supports(MappingContext ctx) {
         return mappings.containsKey(ctx);
     }
 

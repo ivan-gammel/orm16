@@ -1,8 +1,8 @@
 package com.esoftworks.orm16.processor.model.builder;
 
-import com.esoftworks.orm16.core.annotations.SerializationContext;
-import com.esoftworks.orm16.core.annotations.SerializationTargets;
-import com.esoftworks.orm16.core.annotations.SerializedEntity;
+import com.esoftworks.orm16.core.annotations.MappingContext;
+import com.esoftworks.orm16.core.annotations.EntityMappings;
+import com.esoftworks.orm16.core.annotations.MappedEntity;
 import com.esoftworks.orm16.processor.model.Entity;
 import com.esoftworks.orm16.processor.model.EntityTarget;
 
@@ -19,7 +19,7 @@ public class EntityBuilder implements Builder<Entity> {
     private String packageName;
     private String name;
     private Map<String, PropertyBuilder> properties = new LinkedHashMap<>();
-    private Map<SerializationContext, EntityTarget> mappings = new HashMap<>();
+    private Map<MappingContext, EntityTarget> mappings = new HashMap<>();
     private EntityBuilder key;
 
     public EntityBuilder(String packageName,
@@ -29,20 +29,20 @@ public class EntityBuilder implements Builder<Entity> {
         this.name = element.getSimpleName().toString();
         this.packageName = packageName;
         element.getRecordComponents().forEach(e -> this.add(e, env));
-        SerializedEntity[] targets = {};
-        SerializationTargets serialized = element.getAnnotation(SerializationTargets.class);
+        MappedEntity[] targets = {};
+        EntityMappings serialized = element.getAnnotation(EntityMappings.class);
         if (serialized != null) {
             targets = serialized.value();
         } else {
-            var target = element.getAnnotation(SerializedEntity.class);
+            var target = element.getAnnotation(MappedEntity.class);
             if (target != null) {
-                targets = new SerializedEntity[] { target };
+                targets = new MappedEntity[] { target };
             }
         }
-        for (SerializedEntity target : targets) {
-            for (SerializationContext ctx : target.context()) {
+        for (MappedEntity target : targets) {
+            for (MappingContext ctx : target.context()) {
                 boolean embeddable = false;
-                String name = target.value();
+                String name = target.as();
                 if ("".equals(name)) {
                     name = this.name;
                 }

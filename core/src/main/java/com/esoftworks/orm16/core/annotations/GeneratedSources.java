@@ -8,12 +8,8 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.SOURCE)
 @java.lang.annotation.Target({
-        ElementType.TYPE,
         ElementType.PACKAGE,
-        ElementType.RECORD_COMPONENT,
-        ElementType.FIELD,
-        ElementType.PARAMETER,
-        ElementType.METHOD
+        ElementType.MODULE
 })
 @Repeatable(CodeGenerator.class)
 public @interface GeneratedSources {
@@ -22,13 +18,13 @@ public @interface GeneratedSources {
      * Preferred serialization format when writing objects as strings
      * @return
      */
-    SerializationFormat preferredFormat() default SerializationFormat.JSON;
+    OutputFormat preferredFormat() default OutputFormat.JSON;
 
     /**
      * Targets for which this code generation policy applies
      * @return list of applicable serialization contexts
      */
-    SerializationContext[] target();
+    MappingContext[] target();
 
     /**
      * Custom conversions applied in given serialization contexts.
