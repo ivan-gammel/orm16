@@ -4,6 +4,10 @@ import com.esoftworks.orm16.core.annotations.AttributeOverride;
 import com.esoftworks.orm16.core.annotations.OutputFormat;
 import com.esoftworks.orm16.processor.model.AttributeTarget;
 
+import java.util.Arrays;
+
+import static java.util.stream.Collectors.toMap;
+
 public class MappingBuilder implements Builder<AttributeTarget> {
 
     private String name;
@@ -12,6 +16,7 @@ public class MappingBuilder implements Builder<AttributeTarget> {
     private Class<?> targetClass;
     private OutputFormat format;
     private String pattern;
+    private String attributeNameTemplate;
 
     public MappingBuilder mapTo(String name) {
         this.name = name;
@@ -19,9 +24,11 @@ public class MappingBuilder implements Builder<AttributeTarget> {
     }
 
     public MappingBuilder asEmbedded(EntityBuilder embeddedEntity,
-                                     AttributeOverride[] overrides) {
+                                     AttributeOverride[] overrides,
+                                     String attributeNameTemplate) {
         this.embeddedEntity = embeddedEntity;
         this.overrides = overrides;
+        this.attributeNameTemplate = attributeNameTemplate;
         return this;
     }
 
@@ -46,6 +53,10 @@ public class MappingBuilder implements Builder<AttributeTarget> {
 
     @Override
     public AttributeTarget build() {
-        return new AttributeTarget(name, embeddedEntity.build(), conversionRequired() ? new ConversionTarget(targetClass, format, pattern) : null);
+        return new AttributeTarget(name,
+                embeddedEntity.build(),
+                conversionRequired() ? new ConversionTarget(targetClass, format, pattern) : null,
+                Arrays.stream(overrides).collect(toMap(AttributeOverride::map, AttributeOverride::to)),
+                attributeNameTemplate);
     }
 }

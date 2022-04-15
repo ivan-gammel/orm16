@@ -92,7 +92,7 @@ public class RepositoryGenerator extends AbstractProcessor {
                 if (model.supports(ctx)) {
                     try {
                         CodeGenerators.forTarget(ctx)
-                                .enumerateTemplates(model, config)
+                                .enumerateTemplates(model, config, processingEnv)
                                 .forEach(template -> generate(template, roundEnv));
                         messager.printMessage(Diagnostic.Kind.NOTE, "Successfully generated code for " + contextName + " mapping.");
                     } catch (UnsupportedOperationException e) {

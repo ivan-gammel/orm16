@@ -22,4 +22,28 @@ public class RepositoryGeneratorTest {
                      .hasSourceEquivalentTo(forResource("com/example/expected/DocumentRepository.java"));
     }
 
+    @Test
+    public void shouldCompileEmbeddedEntityWithoutErrors() {
+        Compilation compilation = javac()
+                .withProcessors(new RepositoryGenerator())
+                .compile(forResource("com/example/PersonalName.java"),
+                         forResource("com/example/EmbedExample.java"));
+
+        assertThat(compilation).succeeded();
+
+        assertThat(compilation)
+                     .generatedSourceFile("EmbedExampleRepository")
+                     .hasSourceEquivalentTo(forResource("com/example/expected/EmbedExampleRepository.java"));
+    }
+
+    @Test
+    public void shouldReportMissingIdAnnotationAsError() {
+        Compilation compilation = javac()
+                .withProcessors(new RepositoryGenerator())
+                .compile(forResource("com/example/MissingId.java"));
+
+        assertThat(compilation).failed();
+        assertThat(compilation).hadErrorContaining("@Id");
+    }
+
 }

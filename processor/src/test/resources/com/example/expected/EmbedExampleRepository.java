@@ -3,43 +3,50 @@ package com.example.jdbc;
 import java.sql.*;
 import java.util.Optional;
 import java.util.UUID;
-import java.time.Instant;
+import com.example.PersonalName;
 import com.esoftworks.orm16.core.repository.Repository;
 import com.esoftworks.orm16.core.jdbc.*;
-import com.example.Document;
+import com.example.EmbedExample;
 
 import static java.lang.String.valueOf;
 import static java.lang.String.join;
 import static com.esoftworks.orm16.core.repository.RepositoryExceptionFactory.*;
 
-public record DocumentRepository(JdbcDatabase database)
-        implements Repository<Document, UUID> {
+public record EmbedExampleRepository(JdbcDatabase database)
+        implements Repository<EmbedExample, UUID> {
 
-    public DocumentRepository {
+    public EmbedExampleRepository {
         if (database == null) throw new NullPointerException("database");
     }
 
 
-    public static class DocumentMapper {
-        public static Document map(ResultSet rs) throws SQLException {
-            return new Document(
+    public static class PersonalNameMapper {
+        public static PersonalName map(ResultSet rs) throws SQLException {
+            return new PersonalName(
+                    rs.getString("name_first"),
+                    rs.getString("name_last")
+            );
+        }
+    }
+
+    public static class EmbedExampleMapper {
+        public static EmbedExample map(ResultSet rs) throws SQLException {
+            return new EmbedExample(
                     (UUID) rs.getObject("uuid"),
-                    rs.getTimestamp("created").toInstant(),
-                    rs.getString("subject"),
-                    rs.getString("content")
+                    PersonalNameMapper.map(rs)
             );
         }
     }
 
 
-    public Optional<Document> get(UUID uuid) {
+    public Optional<EmbedExample> get(UUID uuid) {
         try {
             return database.query(
                             """
-                                SELECT uuid, created, subject, content
-                                FROM documents
+                                SELECT uuid, name_first, name_last
+                                FROM embed_examples
                                 WHERE uuid=?""",
-                            DocumentMapper::map,
+                            EmbedExampleMapper::map,
                             uuid
                     )
                     .stream()
@@ -50,16 +57,15 @@ public record DocumentRepository(JdbcDatabase database)
     }
 
     @Override
-    public Document add(Document value) {
+    public EmbedExample add(EmbedExample value) {
         try {
             database.update(
                     """
-                        INSERT INTO documents (uuid, created, subject, content)
-                        VALUES (?, ?, ?, ?)""",
+                        INSERT INTO embed_examples (uuid, name_first, name_last)
+                        VALUES (?, ?, ?)""",
                     value.uuid(),
-                    Timestamp.from(value.created()),
-                    value.subject(),
-                    value.content()
+                    value.name().first(),
+                    value.name().last()
             );
             return value;
         } catch (SQLException e) {
@@ -68,16 +74,15 @@ public record DocumentRepository(JdbcDatabase database)
     }
 
     @Override
-    public Document update(Document value) {
+    public EmbedExample update(EmbedExample value) {
         try {
             database.update(
                     """
-                        UPDATE documents
-                        SET created=?, subject=?, content=?
+                        UPDATE embed_examples
+                        SET name_first=?, name_last=?
                         WHERE uuid=?""",
-                    Timestamp.from(value.created()),
-                    value.subject(),
-                    value.content(),
+                    value.name().first(),
+                    value.name().last(),
                     value.uuid()
             );
             return value;
@@ -89,7 +94,7 @@ public record DocumentRepository(JdbcDatabase database)
     @Override
     public boolean remove(UUID uuid) {
         try {
-            int changes = database.update("DELETE FROM documents WHERE uuid=?", uuid);
+            int changes = database.update("DELETE FROM embed_examples WHERE uuid=?", uuid);
             return changes > 0;
         } catch (SQLException e) {
             throw onDelete(e, uuid);

@@ -51,6 +51,13 @@ public class EntityBuilder implements Builder<Entity> {
         }
     }
 
+    public EntityBuilder embeddableIn(MappingContext ctx) {
+        var mapping = mappings.get(ctx);
+        var name = mapping != null ? mapping.name() : this.name;
+        mappings.put(ctx, new EntityTarget(name, true));
+        return this;
+    }
+
     private EntityBuilder add(RecordComponentElement element, ProcessingEnvironment env) {
         merge(element, env);
         return this;
@@ -67,4 +74,5 @@ public class EntityBuilder implements Builder<Entity> {
         PropertyBuilder builder = properties.computeIfAbsent(element.getSimpleName().toString(), name -> new PropertyBuilder(element));
         return builder;
     }
+
 }

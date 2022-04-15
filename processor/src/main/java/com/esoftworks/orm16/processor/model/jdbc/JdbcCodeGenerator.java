@@ -7,15 +7,16 @@ import com.esoftworks.orm16.processor.ContextSpecificGenerator;
 import com.esoftworks.orm16.processor.view.SerializedView;
 import freemarker.template.Configuration;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import java.util.stream.Stream;
 
 public class JdbcCodeGenerator implements ContextSpecificGenerator {
 
     @Override
     public Stream<ClassTemplate> enumerateTemplates(Model model,
-                                                    Configuration config) {
+                                                    Configuration config, ProcessingEnvironment processingEnv) {
 
-        Stream<ClassTemplate> repositories = new SerializedView(MappingContext.PERSISTENCE, model)
+        Stream<ClassTemplate> repositories = new SerializedView(MappingContext.PERSISTENCE, model, processingEnv)
                 .serializedEntities().stream()
                 .map(entity -> new RepositoryTemplate(entity, config));
 

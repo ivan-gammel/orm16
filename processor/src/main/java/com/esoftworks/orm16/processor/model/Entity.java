@@ -15,6 +15,10 @@ public record Entity(
         Entity compositeKey,
         Map<MappingContext, EntityTarget> mappings) {
 
+    public boolean hasPrimaryKey() {
+        return attributes.stream().anyMatch(Attribute::primaryKey);
+    }
+
     public Optional<Attribute> find(String name) {
         return attributes.stream()
                 .filter(attribute -> attribute.name().equals(name))

@@ -64,7 +64,10 @@ public class AttributeMappingContributor implements ModelContributor {
                                 continue;
                             }
                             var returnTypeElement = (TypeElement) ((DeclaredType) returnType).asElement();
-                            builder.merge(returnTypeElement, env).ifPresent(embeddedEntity -> Stream.of(mapping.context()).forEach(ctx -> modifiers.add(property -> property.in(ctx).asEmbedded(embeddedEntity, mapping.overrides()))));
+                            builder.merge(returnTypeElement, env).ifPresent(embeddedEntity -> Stream.of(mapping.context()).forEach(ctx -> {
+                                modifiers.add(property -> property.in(ctx).asEmbedded(embeddedEntity, mapping.overrides(), mapping.overrideAs()));
+                                embeddedEntity.embeddableIn(ctx);
+                            }));
                             break;
 
                     }
