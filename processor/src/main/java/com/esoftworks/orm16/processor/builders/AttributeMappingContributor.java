@@ -1,8 +1,6 @@
 package com.esoftworks.orm16.processor.builders;
 
-import com.esoftworks.orm16.core.annotations.Mapping;
-import com.esoftworks.orm16.core.annotations.MappingContext;
-import com.esoftworks.orm16.core.annotations.OutputFormat;
+import com.esoftworks.orm16.core.annotations.*;
 import com.esoftworks.orm16.processor.model.builder.ModelBuilder;
 import com.esoftworks.orm16.processor.model.builder.PropertyBuilder;
 
@@ -13,8 +11,11 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
+import java.io.Serializable;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -32,44 +33,68 @@ public class AttributeMappingContributor implements ModelContributor {
 
                 var modifiers = new LinkedList<Consumer<PropertyBuilder>>();
 
-                var mappings = attribute.getAnnotationsByType(Mapping.class);
-                for (Mapping mapping : mappings) {
-                    for (MappingContext ctx : mapping.context()) {
-                        if (!mapping.to().isEmpty()) {
-                            modifiers.add(property -> property.in(ctx).mapTo(mapping.to()));
+                Elements elements = env.getElementUtils();
+                var mappings = attribute.getAnnotationMirrors().stream()
+                        .filter(mirror -> mirror.getAnnotationType().asElement().getSimpleName().contentEquals(Mapping.class.getSimpleName()))
+                        .map(mirror -> new MappingSpec(elements, mirror))
+                        .toList();
+
+                for (var mapping : mappings) {
+                    MappingContext[] context = mapping.asArray("context", MappingContext.class);
+                    for (MappingContext ctx : context) {
+                        String to = mapping.asValue("to" , String.class);
+                        if (!to.isEmpty()) {
+                            modifiers.add(property -> property.in(ctx).mapTo(to));
                         }
                     }
-                    switch (mapping.serializeAs()) {
-                        case VALUE:
-                            if (!mapping.as().equals(Object.class)) {
-                                Stream.of(mapping.context()).forEach(ctx -> modifiers.add(property -> property.in(ctx).convertTo(mapping.as())));
-                            }
-                            if (mapping.format() != OutputFormat.NONE || !mapping.pattern().isEmpty()) {
-                                if (!(mapping.as().equals(Object.class) || mapping.as().equals(String.class))) {
-                                    env.getMessager().printMessage(Diagnostic.Kind.ERROR, "Incorrect mapping of " + attributeName + ": cannot set output format for target class " + mapping.as().getName() + ". String target expected.");
-                                } else {
-                                    if (mapping.format() != OutputFormat.NONE) {
-                                        Stream.of(mapping.context()).forEach(ctx -> modifiers.add(property -> property.in(ctx).convertTo(String.class).transform(mapping.format())));
-                                    }
-                                    if (!mapping.pattern().isEmpty()) {
-                                        Stream.of(mapping.context()).forEach(ctx -> modifiers.add(property -> property.in(ctx).convertTo(String.class).applyPattern(mapping.pattern())));
+                    var kind = mapping.asEnum("serializeAs", AttributeMappingKind.class);
+                    TypeElement as = mapping.asType("as");
+                    String targetTypeName = as.getQualifiedName().toString();
+                    switch (kind) {
+                        case VALUE -> {
+                            OutputFormat format = mapping.asEnum("format" , OutputFormat.class);
+                            switch (format) {
+                                case NONE -> {
+                                    // domain-specific format: convert if necessary
+                                    if (!targetTypeName.equals(Serializable.class.getName())) {
+                                        Stream.of(context).forEach(ctx -> modifiers.add(property -> property.in(ctx).convertTo(targetTypeName)));
                                     }
                                 }
+                                case PATTERN -> {
+                                    // expect target type to be String
+                                    if (!targetTypeName.equals(String.class.getName())) {
+                                        env.getMessager().printMessage(Diagnostic.Kind.ERROR, "Output format PATTERN defined for " + attributeName + " but target type is " + targetTypeName + ". String expected.");
+                                    }
+                                    // expect pattern not to be empty
+                                    String pattern = mapping.asValue("pattern" , String.class);
+                                    if (pattern.isEmpty()) {
+                                        env.getMessager().printMessage(Diagnostic.Kind.ERROR, "Output format PATTERN defined for " + attributeName + " but pattern is not specified.");
+                                    }
+                                    Stream.of(context).forEach(ctx -> modifiers.add(property -> property.in(ctx).convertTo(String.class.getName()).applyPattern(pattern)));
+                                }
+                                case XML, JSON -> {
+                                    // expect target type to be String
+                                    if (!targetTypeName.equals(String.class.getName())) {
+                                        env.getMessager().printMessage(Diagnostic.Kind.ERROR, "Output format " + format.name() + " defined for " + attributeName + " but target type is " + targetTypeName + ". String expected.");
+                                    }
+                                    Stream.of(context).forEach(ctx -> modifiers.add(property -> property.in(ctx).convertTo(String.class.getName()).transform(format)));
+                                }
                             }
-                            break;
-                        case EMBEDDED:
+                        }
+                        case EMBEDDED -> {
                             TypeMirror returnType = attribute.getAccessor().getReturnType();
                             if (returnType.getKind() != TypeKind.DECLARED) {
                                 env.getMessager().printMessage(Diagnostic.Kind.ERROR, returnType.toString() + " cannot be embedded as " + attributeName);
                                 continue;
                             }
                             var returnTypeElement = (TypeElement) ((DeclaredType) returnType).asElement();
-                            builder.merge(returnTypeElement, env).ifPresent(embeddedEntity -> Stream.of(mapping.context()).forEach(ctx -> {
-                                modifiers.add(property -> property.in(ctx).asEmbedded(embeddedEntity, mapping.overrides(), mapping.overrideAs()));
+                            builder.merge(returnTypeElement, env).ifPresent(embeddedEntity -> Stream.of(context).forEach(ctx -> {
+                                var overrides = mapping.asArray("overrides" , AttributeOverride.class);
+                                var overrideAs = mapping.asValue("overrideAs" , String.class);
+                                modifiers.add(property -> property.in(ctx).asEmbedded(embeddedEntity, overrides, overrideAs));
                                 embeddedEntity.embeddableIn(ctx);
                             }));
-                            break;
-
+                        }
                     }
                 }
 
